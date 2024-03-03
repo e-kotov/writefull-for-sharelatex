@@ -33,9 +33,9 @@ The default output of the script is in your home Downloads folder: `~/Downloads/
 
     - In Chrome open `chrome://extensions/`
 
-    - Enable developer mode in the top right corner."
+    - Enable developer mode in the top right corner.
 
-    - Click 'Load unpacked' button in the top right corner."
+    - Click 'Load unpacked' button in the top right corner.
     
     - Select the `~/Downloads/writefull_chrome_patched` folder
 
