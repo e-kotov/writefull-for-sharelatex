@@ -25,7 +25,7 @@ chmod +x ./writefull_patch.sh
 
 - You will be prompted to provide the domain name of your ShareLaTeX server. The default is `sharelatex.com`, you may be providing something like `sharelatex.your-org-name.fr`.
 
-The script assumes that you have the `Writefull for Overleaf` extension installed in the `Default` Google Chrome profile. If that is not the case, it will scan all other profiles in your home folder for the installed extension.
+The script assumes that you have the `Writefull for Overleaf` extension installed in the `Default` Google Chrome profile. If that is not the case, it will scan all other Gogole Chrome profiles in your home folder for the installed extension.
 
 The default output of the script is in your home Downloads folder: `~/Downloads/writefull_chrome_patched`.
 
