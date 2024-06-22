@@ -3,18 +3,20 @@
 # Determine the OS type
 OS_TYPE=$(uname)
 
-# Set the base directory for Chrome profiles based on the OS type
+# Get user's home directory
+USER_HOME=$(eval echo ~$USER)
+
+# Set the base directory for Chrome/Chromium profiles based on the OS type
 if [ "$OS_TYPE" = "Darwin" ]; then
     CHROME_BASE_DIR="${USER_HOME}/Library/Application Support/Google/Chrome"
+    CHROMIUM_BASE_DIR="${USER_HOME}/Library/Application Support/Chromium"
 elif [ "$OS_TYPE" = "Linux" ]; then
     CHROME_BASE_DIR="${USER_HOME}/.config/google-chrome"
+    CHROMIUM_BASE_DIR="${USER_HOME}/.config/chromium"
 else
     echo "Unsupported OS type: $OS_TYPE"
     exit 1
 fi
-
-# Get user's home directory
-USER_HOME=$(eval echo ~$USER)
 
 # Define the extension's ID
 EXT_ID="edhnemgfcihjcpfhkoiiejgedkbefnhg"
@@ -22,16 +24,25 @@ EXT_ID="edhnemgfcihjcpfhkoiiejgedkbefnhg"
 # Initialize extension directory variable
 EXT_DIR=""
 
-# Find the directory with the manifest.json in any profile
-for PROFILE in "${CHROME_BASE_DIR}/Default" "${CHROME_BASE_DIR}"/Profile*; do
-    if [ -d "${PROFILE}/Extensions/${EXT_ID}" ]; then
-        EXT_DIR=$(find "${PROFILE}/Extensions/${EXT_ID}" -type d -name "*_*" | head -n 1)
-        if [ -n "$EXT_DIR" ]; then
-            echo "Extension found in: $EXT_DIR"
-            break
+# Function to find the extension directory
+find_extension_dir() {
+    local BASE_DIR=$1
+    for PROFILE in "${BASE_DIR}/Default" "${BASE_DIR}"/Profile*; do
+        if [ -d "${PROFILE}/Extensions/${EXT_ID}" ]; then
+            EXT_DIR=$(find "${PROFILE}/Extensions/${EXT_ID}" -type d -name "*_*" | head -n 1)
+            if [ -n "$EXT_DIR" ]; then
+                echo "Extension found in: $EXT_DIR"
+                break
+            fi
         fi
-    fi
-done
+    done
+}
+
+# Search for the extension directory in Chrome and Chromium profiles
+find_extension_dir "$CHROME_BASE_DIR"
+if [ -z "$EXT_DIR" ]; then
+    find_extension_dir "$CHROMIUM_BASE_DIR"
+fi
 
 # Check if extension directory was found
 if [ -z "$EXT_DIR" ]; then
@@ -91,8 +102,8 @@ cp "${SCRIPT_DIR}/new_assets/icon.png" "${NEW_DIR}/assets/"
 cp "${SCRIPT_DIR}/new_assets/icon48.png" "${NEW_DIR}/assets/"
 
 echo "Modification completed."
-echo "Manually install the patched extension in Chrome"
-echo "1. In Chrome open chrome://extensions/"
+echo "Manually install the patched extension in Chrome/Chromium"
+echo "1. In Chrome/Chromium open chrome://extensions/"
 echo "2. Enable developer mode in the top right corner."
 echo "3. Click 'Load unpacked' button in the top right corner."
 echo "4. Select '$NEW_DIR' folder."
