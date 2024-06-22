@@ -13,6 +13,7 @@ if [ "$OS_TYPE" = "Darwin" ]; then
 elif [ "$OS_TYPE" = "Linux" ]; then
     CHROME_BASE_DIR="${USER_HOME}/.config/google-chrome"
     CHROMIUM_BASE_DIR="${USER_HOME}/.config/chromium"
+    SNAP_CHROMIUM_BASE_DIR="${USER_HOME}/snap/chromium/common/chromium"
 else
     echo "Unsupported OS type: $OS_TYPE"
     exit 1
@@ -28,8 +29,9 @@ EXT_DIR=""
 find_extension_dir() {
     local BASE_DIR=$1
     for PROFILE in "${BASE_DIR}/Default" "${BASE_DIR}"/Profile*; do
-        if [ -d "${PROFILE}/Extensions/${EXT_ID}" ]; then
-            EXT_DIR=$(find "${PROFILE}/Extensions/${EXT_ID}" -type d -name "*_*" | head -n 1)
+        echo "Checking profile directory: $PROFILE"  # Debug statement
+        if [ -d "$PROFILE/Extensions/$EXT_ID" ]; then
+            EXT_DIR=$(find "$PROFILE/Extensions/$EXT_ID" -type d -name "*_*" | head -n 1)
             if [ -n "$EXT_DIR" ]; then
                 echo "Extension found in: $EXT_DIR"
                 break
@@ -38,10 +40,13 @@ find_extension_dir() {
     done
 }
 
-# Search for the extension directory in Chrome and Chromium profiles
+# Search for the extension directory in Chrome, Chromium, and Snap Chromium profiles
 find_extension_dir "$CHROME_BASE_DIR"
 if [ -z "$EXT_DIR" ]; then
     find_extension_dir "$CHROMIUM_BASE_DIR"
+fi
+if [ -z "$EXT_DIR" ]; then
+    find_extension_dir "$SNAP_CHROMIUM_BASE_DIR"
 fi
 
 # Check if extension directory was found
@@ -98,6 +103,7 @@ rm "$TMP_MANIFEST"
 
 # Detect script's running directory and copy new icons
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+mkdir -p "${NEW_DIR}/assets"
 cp "${SCRIPT_DIR}/new_assets/icon.png" "${NEW_DIR}/assets/"
 cp "${SCRIPT_DIR}/new_assets/icon48.png" "${NEW_DIR}/assets/"
 
