@@ -1,10 +1,23 @@
 #!/bin/bash
 
+# Determine the OS type
+OS_TYPE=$(uname)
+
 # Get user's home directory
 USER_HOME=$(eval echo ~$USER)
 
-# Base directory for Chrome profiles
-CHROME_BASE_DIR="${USER_HOME}/Library/Application Support/Google/Chrome"
+# Set the base directory for Chrome/Chromium profiles based on the OS type
+if [ "$OS_TYPE" = "Darwin" ]; then
+    CHROME_BASE_DIR="${USER_HOME}/Library/Application Support/Google/Chrome"
+    CHROMIUM_BASE_DIR="${USER_HOME}/Library/Application Support/Chromium"
+elif [ "$OS_TYPE" = "Linux" ]; then
+    CHROME_BASE_DIR="${USER_HOME}/.config/google-chrome"
+    CHROMIUM_BASE_DIR="${USER_HOME}/.config/chromium"
+    SNAP_CHROMIUM_BASE_DIR="${USER_HOME}/snap/chromium/common/chromium"
+else
+    echo "Unsupported OS type: $OS_TYPE"
+    exit 1
+fi
 
 # Define the extension's ID
 EXT_ID="edhnemgfcihjcpfhkoiiejgedkbefnhg"
@@ -12,16 +25,29 @@ EXT_ID="edhnemgfcihjcpfhkoiiejgedkbefnhg"
 # Initialize extension directory variable
 EXT_DIR=""
 
-# Find the directory with the manifest.json in any profile
-for PROFILE in "${CHROME_BASE_DIR}"/Profile*; do
-    if [ -d "${PROFILE}/Extensions/${EXT_ID}" ]; then
-        EXT_DIR=$(find "${PROFILE}/Extensions/${EXT_ID}" -type d -name "*_*" | head -n 1)
-        if [ -n "$EXT_DIR" ]; then
-            echo "Extension found in: $EXT_DIR"
-            break
+# Function to find the extension directory
+find_extension_dir() {
+    local BASE_DIR=$1
+    for PROFILE in "${BASE_DIR}/Default" "${BASE_DIR}"/Profile*; do
+        echo "Checking profile directory: $PROFILE"  # Debug statement
+        if [ -d "$PROFILE/Extensions/$EXT_ID" ]; then
+            EXT_DIR=$(find "$PROFILE/Extensions/$EXT_ID" -type d -name "*_*" | head -n 1)
+            if [ -n "$EXT_DIR" ]; then
+                echo "Extension found in: $EXT_DIR"
+                break
+            fi
         fi
-    fi
-done
+    done
+}
+
+# Search for the extension directory in Chrome, Chromium, and Snap Chromium profiles
+find_extension_dir "$CHROME_BASE_DIR"
+if [ -z "$EXT_DIR" ]; then
+    find_extension_dir "$CHROMIUM_BASE_DIR"
+fi
+if [ -z "$EXT_DIR" ]; then
+    find_extension_dir "$SNAP_CHROMIUM_BASE_DIR"
+fi
 
 # Check if extension directory was found
 if [ -z "$EXT_DIR" ]; then
@@ -61,8 +87,13 @@ TMP_MANIFEST="${NEW_DIR}/manifest_tmp.json"
 cp "${EXT_DIR}/manifest.json" "$TMP_MANIFEST"
 
 # Process the temporary manifest file and make replacements
-sed -i '' "s/overleaf\.com/${DOMAIN}/g" "$TMP_MANIFEST"
-sed -i '' "s/\"Writefull for Overleaf\"/\"Writefull for ${DOMAIN}\"/g" "$TMP_MANIFEST"
+if [ "$OS_TYPE" = "Darwin" ]; then
+    sed -i '' "s/overleaf\.com/${DOMAIN}/g" "$TMP_MANIFEST"
+    sed -i '' "s/\"Writefull for Overleaf\"/\"Writefull for ${DOMAIN}\"/g" "$TMP_MANIFEST"
+else
+    sed -i "s/overleaf\.com/${DOMAIN}/g" "$TMP_MANIFEST"
+    sed -i "s/\"Writefull for Overleaf\"/\"Writefull for ${DOMAIN}\"/g" "$TMP_MANIFEST"
+fi
 
 # Remove the "key" line using grep
 grep -v '"key":' "$TMP_MANIFEST" > "$MANIFEST"
@@ -72,13 +103,14 @@ rm "$TMP_MANIFEST"
 
 # Detect script's running directory and copy new icons
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+mkdir -p "${NEW_DIR}/assets"
 cp "${SCRIPT_DIR}/new_assets/icon.png" "${NEW_DIR}/assets/"
 cp "${SCRIPT_DIR}/new_assets/icon48.png" "${NEW_DIR}/assets/"
 
 echo "Modification completed."
-echo "Manually install the patched extension in Chrome"
-echo "1. In Chrome open chrome://extensions/"
+echo "Manually install the patched extension in Chrome/Chromium"
+echo "1. In Chrome/Chromium open chrome://extensions/"
 echo "2. Enable developer mode in the top right corner."
 echo "3. Click 'Load unpacked' button in the top right corner."
 echo "4. Select '$NEW_DIR' folder."
-echo "Ignore that the installation shows an erorr about the manifest version."
+echo "Ignore that the installation shows an error about the manifest version."

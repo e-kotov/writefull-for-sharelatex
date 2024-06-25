@@ -1,6 +1,14 @@
 This shell script patches the [Writefull for Overleaf](https://chromewebstore.google.com/detail/writefull-for-overleaf/edhnemgfcihjcpfhkoiiejgedkbefnhg) Chrome extension to work with any self-hosted ShareLaTeX server on custom domain. It replaces the icons of the extension so that you don't mix it up with the original extension and can use the original with [https://www.overleaf.com/](https://www.overleaf.com/).
 
-How to use it:
+# Supported OS and browsers:
+
+- macOS / Linux
+
+- Google Chrome / Chromium / Chromium installed from `snap`
+
+The script detects the OS automatically and searches the extension folders automatically.
+
+# How to use it:
 
 1. Go to https://chromewebstore.google.com/detail/writefull-for-overleaf/edhnemgfcihjcpfhkoiiejgedkbefnhg and install the latest version of `Writefull for Overleaf` in your Chrome browser.
 
